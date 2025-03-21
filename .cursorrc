@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "rules": {
+    "react": {
+      "component_structure": {
+        "description": "Guidelines for React component structure and organization",
+        "rules": [
+          "Use functional components with hooks when we have a combination of state and side effects , also never use class components",
+          "Keep components small and focused on a single responsibility",
+          "Extract reusable logic into custom hooks or helpers, first in the component file and then in a separate file called 'utils.ts'",
+          "Implement proper TypeScript interfaces",
+          "Use meaningful component and prop names that reflect their purpose",
+          "Separate business logic from presentation components (Container/Presenter pattern)",
+          "Implement error boundaries at appropriate levels",
+          "Use early returns for simple conditions",
+          "Use semantic HTML tags and attributes"
+        ]
+      },
+      "hooks_usage": {
+        "description": "Best practices for React hooks",
+        "rules": [
+          "Follow hooks naming convention (use'use' prefix)",
+          "Keep hooks at the top level - don't use them inside loops or conditions",
+          "Memoize callbacks with useCallback for performance optimization",
+          "Use useMemo for expensive computations",
+          "Implement custom hooks for reusable stateful logic",
+          "Handle cleanup in useEffect properly"
+        ]
+      },
+      "state_management": {
+        "description": "Guidelines for state management",
+        "rules": [
+          "Will use React Query for data fetching and caching from API routes, from there use prisma to connect to the database",
+          "try to access data from react query in loader functions when possible",
+          "Keep state as local as possible and use useState for simple state",
+          "Use context API for truly global state",
+          "Implement proper state initialization",
+          "Handle loading and error states explicitly",
+          "Use reducers for complex state logic",
+          "Use zod for form validation",
+          "Use types from the centralized types folder for all state and data structures"
+        ]
+      }
+    },
+    "code_quality": {
+      "modularity": {
+        "description": "Guidelines for maintaining modular code",
+        "rules": [
+          "Follow Single Responsibility Principle",
+          "Keep functions pure when possible",
+          "Limit function parameters (max 3, use objects for more)",
+          "Use meaningful file and directory structure",
+          "Implement proper code splitting and lazy loading",
+          "Export one main component per file excent the files in app/components/ui",
+          "Ensure type safety by using the centralized type system"
+        ]
+      },
+      "naming_conventions": {
+        "description": "Standards for naming in the codebase",
+        "rules": [
+          "Use camelCase for variables and functions",
+          "Use PascalCase for components and interfaces",
+          "Use UPPER_SNAKE_CASE for constants",
+          "Use descriptive names that indicate purpose",
+          "Prefix boolean variables with is/has/should",
+          "Use verb prefixes for function names (get/set/handle/update)"
+        ]
+      },
+      "documentation": {
+        "description": "Requirements for code documentation",
+        "rules": [
+          "Document complex business logic in the docs folder under the 'business-logic.md'  file when needed",
+          "Add JSDoc comments for public APIs",
+          "Document all types with JSDoc comments explaining their purpose, properties, and usage",
+          "Maintain the types/README.md file with up-to-date guidelines for the type system",
+          "Include examples in documentation when helpful",
+          "Document assumptions and edge cases",
+          "Keep documentation up to date with code changes, if easier, first write it in a separate file, then move it to the correct file"
+        ]
+      }
+    },
+    "performance": {
+      "optimization": {
+        "description": "Guidelines for performance optimization",
+        "rules": [
+          "Implement proper code splitting",
+          "Use React.memo for expensive renders",
+          "Optimize images and assets",
+          "Implement virtualization for long lists",
+          "Use proper key props in lists like id or combined readable combination of name and index",
+          "Avoid unnecessary re-renders"
+        ]
+      }
+    },
+    "testing": {
+      "requirements": {
+        "description": "Testing standards and requirements",
+        "rules": [
+          "Write unit tests for business logic",
+          "Implement integration tests for critical paths",
+          "Use meaningful test descriptions",
+          "Follow AAA pattern (Arrange-Act-Assert)",
+          "Mock external dependencies appropriately",
+          "Test error cases and edge conditions"
+        ]
+      }
+    },
+    "iteration_and_improvement": {
+      "description": "Guidelines for continuous improvement",
+      "rules": [
+        "Prefer small steps and iteration over complex solutions",
+        "Never settle for the first working solution, every step must be reasoned and justified with the context and input",
+        "Review and refactor code when it is becoming to big or complex",
+        "Consider multiple approaches before implementation",
+        "Evaluate trade-offs between different solutions",
+        "Document why a particular solution was chosen",
+        "Measure performance impact of changes",
+        "Seek peer review and feedback",
+        "Consider maintainability and scalability",
+        "Test different approaches in isolation",
+        "Keep track of improvement ideas for future iterations"
+      ]
+    },
+    "type_management": {
+      "description": "Guidelines for the centralized type system",
+      "rules": [
+        "Use the centralized types folder as the single source of truth for all types",
+        "Import types from the root 'types' folder instead of defining them locally",
+        "Add new types to the appropriate file in the types folder (forecast.ts, spot.ts, api.ts)",
+        "Document all types with JSDoc comments explaining their purpose and usage",
+        "For Prisma enums, import type-only from 'types' for annotations, but import directly from '@prisma/client' for runtime usage",
+        "Compose complex types from simpler ones when possible",
+        "Avoid duplicating type definitions across the codebase",
+        "Use explicit type annotations to improve code readability",
+        "Minimize the use of 'any' to maintain type safety",
+        "When modifying existing types, consider the impact on both client and server code"
+      ]
+    },
+    "error_handling": {
+      "description": "Standards for error handling",
+      "rules": [
+        "Use try-catch blocks appropriately",
+        "Implement proper error boundaries",
+        "Log errors with meaningful context",
+        "Handle async errors properly",
+        "Provide user-friendly error messages",
+        "Implement proper fallback UI"
+      ]
+    }
+  }
+}

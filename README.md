@@ -32,6 +32,42 @@ npm run dev
 
 Your application will be available at `http://localhost:3000`.
 
+## Database Setup and Seeding
+
+### Database Seeding
+
+This project uses Prisma with Supabase for database and authentication. To seed the database:
+
+```bash
+# Regular Prisma seed (database only)
+npm run prisma:seed
+
+# Seed both database and Supabase Auth tables
+npm run seed:auth
+```
+
+To use the Supabase Auth integration:
+
+1. Add your Supabase service role key to the `.env` file:
+
+```
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-from-supabase-dashboard"
+```
+
+2. Run the auth-enabled seed command which will create users in both Prisma and Supabase Auth:
+
+```bash
+npm run seed:auth
+```
+
+All seeded users will have the password: `password123`
+
+### Test User Credentials
+
+For a complete list of all test users created during seeding, their roles, and login information, see:
+
+- [User Credentials Documentation](./docs/user-credentials.md)
+
 ## Building for Production
 
 Create a production build:

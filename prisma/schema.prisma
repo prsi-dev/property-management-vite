@@ -1,0 +1,602 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                           String               @id @default(uuid())
+  email                        String               @unique
+  password                     String
+  name                         String
+  role                         Role
+  createdAt                    DateTime             @default(now())
+  updatedAt                    DateTime             @updatedAt
+  alternativeContact           String?
+  creditScore                  Int?
+  employer                     String?
+  employmentStatus             String?
+  identificationDocumentNumber String?
+  identificationDocumentType   String?
+  identificationVerified       Boolean              @default(false)
+  monthlyIncome                Float?
+  phoneNumber                  String?
+  previousLandlordReference    String?
+  organizationId               String?
+  applicationForms             ApplicationForm[]
+  communications               Communication[]
+  eventAssignments             EventAssignment[]
+  maintenanceRequests          MaintenanceRequest[]
+  metadata                     MetadataField[]      @relation("UserMetadata")
+  notifications                Notification[]
+  resourceAssignments          ResourceAssignment[]
+  organization                 Organization?        @relation(fields: [organizationId], references: [id])
+  ownedResources               Resource[]           @relation("ResourceOwner")
+}
+
+model JoinRequest {
+  id         String        @id @default(uuid())
+  email      String        @unique
+  name       String
+  role       Role
+  status     RequestStatus @default(PENDING)
+  message    String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model Resource {
+  id                  String               @id @default(uuid())
+  type                ResourceType
+  label               String
+  parentId            String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  address             String?
+  postalCode          String?
+  amenities           String[]
+  bathroomCount       Float?
+  bedroomCount        Int?
+  description         String?
+  images              String[]
+  isActive            Boolean              @default(true)
+  squareFootage       Float?
+  metadataGroupId     String?
+  rentAmount          Float?
+  applications        ApplicationForm[]
+  communications      Communication[]
+  events              Event[]
+  maintenanceRequests MaintenanceRequest[]
+  metadata            MetadataField[]      @relation("ResourceMetadata")
+  notifications       Notification[]
+  expenses            PropertyExpense[]
+  rentalContracts     RentalContract[]
+  metadataGroup       MetadataGroup?       @relation(fields: [metadataGroupId], references: [id])
+  parent              Resource?            @relation("ResourceHierarchy", fields: [parentId], references: [id])
+  children            Resource[]           @relation("ResourceHierarchy")
+  assignments         ResourceAssignment[]
+  organizationOwners  Organization[]       @relation("OrganizationOwner")
+  owners              User[]               @relation("ResourceOwner")
+  tags                Tag[]                @relation("ResourceTags")
+}
+
+model Event {
+  id              String            @id @default(uuid())
+  type            EventType
+  label           String
+  resourceId      String
+  startDate       DateTime
+  endDate         DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  amount          Float?
+  attachments     String[]
+  notes           String?
+  status          EventStatus       @default(PENDING)
+  metadataGroupId String?
+  metadataGroup   MetadataGroup?    @relation(fields: [metadataGroupId], references: [id])
+  resource        Resource          @relation(fields: [resourceId], references: [id])
+  participants    EventAssignment[]
+}
+
+model MetadataGroup {
+  id             String           @id @default(uuid())
+  name           String
+  description    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  Event          Event[]
+  RentalContract RentalContract[]
+  resources      Resource[]
+}
+
+model MetadataField {
+  id             String              @id @default(uuid())
+  key            String
+  value          String
+  dataType       PropertyType
+  resourceId     String?
+  userId         String?
+  organizationId String?
+  contractId     String?
+  maintenanceId  String?
+  applicationId  String?
+  paymentId      String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  application    ApplicationForm?    @relation("ApplicationMetadata", fields: [applicationId], references: [id])
+  contract       RentalContract?     @relation("ContractMetadata", fields: [contractId], references: [id])
+  maintenance    MaintenanceRequest? @relation("MaintenanceMetadata", fields: [maintenanceId], references: [id])
+  organization   Organization?       @relation("OrganizationMetadata", fields: [organizationId], references: [id])
+  payment        RentPayment?        @relation("PaymentMetadata", fields: [paymentId], references: [id])
+  resource       Resource?           @relation("ResourceMetadata", fields: [resourceId], references: [id])
+  user           User?               @relation("UserMetadata", fields: [userId], references: [id])
+
+  @@unique([resourceId, key])
+  @@unique([userId, key])
+  @@unique([organizationId, key])
+  @@unique([contractId, key])
+  @@unique([maintenanceId, key])
+  @@unique([applicationId, key])
+  @@unique([paymentId, key])
+}
+
+model ResourceAssignment {
+  id                String            @id @default(uuid())
+  userId            String
+  resourceId        String
+  role              Role
+  startDate         DateTime
+  endDate           DateTime?
+  isActive          Boolean           @default(true)
+  isPrimary         Boolean           @default(false)
+  contractReference String?
+  rentalAmount      Float?
+  paymentFrequency  PaymentFrequency?
+  securityDeposit   Float?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  resource          Resource          @relation(fields: [resourceId], references: [id])
+  user              User              @relation(fields: [userId], references: [id])
+}
+
+model EventAssignment {
+  id        String                   @id @default(uuid())
+  userId    String
+  eventId   String
+  role      EventParticipantRole
+  status    EventParticipationStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+  event     Event                    @relation(fields: [eventId], references: [id])
+  user      User                     @relation(fields: [userId], references: [id])
+}
+
+model ApplicationForm {
+  id                       String            @id @default(uuid())
+  userId                   String
+  resourceId               String?
+  desiredMoveInDate        DateTime
+  desiredRentalPeriod      Int?
+  numberOfOccupants        Int
+  occupantDetails          String?
+  hasPets                  Boolean           @default(false)
+  petDetails               String?
+  incomeDocuments          String[]
+  referencesProvided       Boolean           @default(false)
+  backgroundCheckStatus    ScreeningStatus   @default(PENDING)
+  creditCheckStatus        ScreeningStatus   @default(PENDING)
+  incomeVerificationStatus ScreeningStatus   @default(PENDING)
+  landlordReferenceStatus  ScreeningStatus   @default(PENDING)
+  status                   ApplicationStatus @default(PENDING)
+  reviewedBy               String?
+  rejectionReason          String?
+  notes                    String?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  resource                 Resource?         @relation(fields: [resourceId], references: [id])
+  user                     User              @relation(fields: [userId], references: [id])
+  metadata                 MetadataField[]   @relation("ApplicationMetadata")
+}
+
+model ContractVersion {
+  id                 String         @id @default(uuid())
+  contractId         String
+  versionNumber      Int
+  documentUrl        String
+  changesDescription String?
+  createdBy          String?
+  createdAt          DateTime       @default(now())
+  contract           RentalContract @relation(fields: [contractId], references: [id])
+
+  @@unique([contractId, versionNumber])
+}
+
+model RentalContract {
+  id                   String            @id @default(uuid())
+  contractNumber       String            @unique
+  resourceId           String
+  startDate            DateTime
+  endDate              DateTime?
+  isOpenEnded          Boolean           @default(false)
+  baseRentAmount       Float
+  securityDeposit      Float
+  depositPaid          Boolean           @default(false)
+  utilityCharges       Float?
+  includedUtilities    UtilityType[]
+  paymentFrequency     PaymentFrequency  @default(MONTHLY)
+  paymentDueDay        Int
+  lateFeePercentage    Float?
+  terminationNotice    Int
+  hasMietpreisbremse   Boolean           @default(false)
+  previousRentAmount   Float?
+  rentIncreaseSchedule String?
+  status               ContractStatus    @default(DRAFT)
+  terminationDate      DateTime?
+  terminationReason    String?
+  contractDocumentUrl  String?
+  additionalDocuments  String[]
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  metadataGroupId      String?
+  versions             ContractVersion[]
+  metadata             MetadataField[]   @relation("ContractMetadata")
+  rentPayments         RentPayment[]
+  metadataGroup        MetadataGroup?    @relation(fields: [metadataGroupId], references: [id])
+  resource             Resource          @relation(fields: [resourceId], references: [id])
+}
+
+model MaintenanceRequest {
+  id                    String                   @id @default(uuid())
+  requestNumber         String                   @unique
+  resourceId            String
+  reportedBy            String
+  category              MaintenanceCategory
+  title                 String
+  description           String
+  priority              RequestPriority          @default(NORMAL)
+  images                String[]
+  assignedTo            String?
+  estimatedCost         Float?
+  actualCost            Float?
+  scheduledDate         DateTime?
+  completedDate         DateTime?
+  status                MaintenanceRequestStatus @default(OPEN)
+  resolution            String?
+  feedback              String?
+  feedbackRating        Int?
+  requiresOwnerApproval Boolean                  @default(false)
+  ownerApprovalStatus   ApprovalStatus?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  communications        Communication[]
+  reporter              User                     @relation(fields: [reportedBy], references: [id])
+  resource              Resource                 @relation(fields: [resourceId], references: [id])
+  metadata              MetadataField[]          @relation("MaintenanceMetadata")
+}
+
+model RentPayment {
+  id                String          @id @default(uuid())
+  contractId        String
+  amount            Float
+  coversPeriodStart DateTime
+  coversPeriodEnd   DateTime
+  dueDate           DateTime
+  datePaid          DateTime?
+  paymentMethod     PaymentMethod?
+  paymentReference  String?
+  status            PaymentStatus   @default(PENDING)
+  lateFee           Float?
+  receiptUrl        String?
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  metadata          MetadataField[] @relation("PaymentMetadata")
+  contract          RentalContract  @relation(fields: [contractId], references: [id])
+}
+
+model PropertyExpense {
+  id                 String            @id @default(uuid())
+  resourceId         String
+  category           ExpenseCategory
+  amount             Float
+  date               DateTime
+  description        String?
+  paidBy             String?
+  paidTo             String?
+  receiptUrl         String?
+  isRecurring        Boolean           @default(false)
+  recurringFrequency PaymentFrequency?
+  taxDeductible      Boolean           @default(false)
+  accountingCategory String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  resource           Resource          @relation(fields: [resourceId], references: [id])
+}
+
+model Communication {
+  id                   String                 @id @default(uuid())
+  type                 CommunicationType
+  direction            CommunicationDirection
+  userId               String
+  resourceId           String?
+  maintenanceRequestId String?
+  subject              String?
+  content              String
+  attachments          String[]
+  sentAt               DateTime               @default(now())
+  readAt               DateTime?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  maintenanceRequest   MaintenanceRequest?    @relation(fields: [maintenanceRequestId], references: [id])
+  resource             Resource?              @relation(fields: [resourceId], references: [id])
+  user                 User                   @relation(fields: [userId], references: [id])
+}
+
+model Organization {
+  id                 String           @id @default(uuid())
+  name               String
+  type               OrganizationType
+  registrationNumber String?
+  taxId              String?
+  address            String?
+  contactEmail       String?
+  contactPhone       String?
+  website            String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  metadata           MetadataField[]  @relation("OrganizationMetadata")
+  members            User[]
+  ownedResources     Resource[]       @relation("OrganizationOwner")
+  tags               Tag[]            @relation("OrganizationTags")
+}
+
+model Tag {
+  id            String         @id @default(uuid())
+  name          String         @unique
+  color         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  organizations Organization[] @relation("OrganizationTags")
+  resources     Resource[]     @relation("ResourceTags")
+}
+
+model Notification {
+  id                String           @id @default(uuid())
+  userId            String
+  title             String
+  message           String
+  type              NotificationType
+  relatedResourceId String?
+  isRead            Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  relatedResource   Resource?        @relation(fields: [relatedResourceId], references: [id])
+  user              User             @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  entityType  String
+  entityId    String
+  action      AuditAction
+  performedBy String
+  details     String?
+  timestamp   DateTime    @default(now())
+}
+
+enum Role {
+  ADMIN
+  PROPERTY_MANAGER
+  TENANT
+  OWNER
+  SERVICE_PROVIDER
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ResourceType {
+  BUILDING
+  UNIT
+  COMMERCIAL_SPACE
+  PARKING_SPOT
+  STORAGE
+  LAND
+  TENANT
+}
+
+enum EventType {
+  LEASE_AGREEMENT
+  RENT_PAYMENT
+  MAINTENANCE_REQUEST
+  INSPECTION
+  MOVE_IN
+  MOVE_OUT
+  CONTRACT_RENEWAL
+  TERMINATION_NOTICE
+}
+
+enum PropertyType {
+  STRING
+  NUMBER
+  BOOLEAN
+  DATE
+  ENUM
+}
+
+enum EventStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EventParticipantRole {
+  OWNER
+  TENANT
+  PROPERTY_MANAGER
+  WITNESS
+  SERVICE_PROVIDER
+}
+
+enum EventParticipationStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  COMPLETED
+}
+
+enum ApplicationStatus {
+  PENDING
+  SCREENING
+  APPROVED
+  REJECTED
+  WAITLISTED
+}
+
+enum ScreeningStatus {
+  PENDING
+  PASSED
+  FAILED
+  WAIVED
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  TERMINATED
+  EXPIRED
+  RENEWED
+}
+
+enum MaintenanceCategory {
+  PLUMBING
+  ELECTRICAL
+  HEATING
+  APPLIANCE
+  STRUCTURAL
+  PEST_CONTROL
+  LANDSCAPING
+  CLEANING
+  OTHER
+}
+
+enum RequestPriority {
+  EMERGENCY
+  HIGH
+  NORMAL
+  LOW
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  LATE
+  PARTIAL
+  WAIVED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  DIRECT_DEBIT
+  CREDIT_CARD
+  CASH
+  CHECK
+  OTHER
+}
+
+enum ExpenseCategory {
+  MAINTENANCE
+  REPAIRS
+  UTILITIES
+  TAXES
+  INSURANCE
+  MANAGEMENT_FEES
+  LEGAL_FEES
+  OTHER
+}
+
+enum PaymentFrequency {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+  BIWEEKLY
+  WEEKLY
+  DAILY
+}
+
+enum UtilityType {
+  ELECTRICITY
+  WATER
+  GAS
+  INTERNET
+  HEATING
+  WASTE_DISPOSAL
+}
+
+enum CommunicationType {
+  EMAIL
+  SMS
+  PHONE_CALL
+  IN_APP_MESSAGE
+  LETTER
+  IN_PERSON
+}
+
+enum CommunicationDirection {
+  OUTGOING
+  INCOMING
+}
+
+enum MaintenanceRequestStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum OrganizationType {
+  INDIVIDUAL
+  COMPANY
+  PARTNERSHIP
+  TRUST
+  GOVERNMENT
+  NON_PROFIT
+}
+
+enum NotificationType {
+  MAINTENANCE_UPDATE
+  PAYMENT_DUE
+  PAYMENT_RECEIVED
+  CONTRACT_UPDATE
+  APPLICATION_STATUS
+  GENERAL
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  APPROVE
+  REJECT
+  ASSIGN
+}
