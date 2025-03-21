@@ -53,6 +53,10 @@ export default [
         // Event management for owners
         route('events', 'routes/dashboard/owner/events/index.tsx'),
         route('events/:id', 'routes/dashboard/owner/events/[id].tsx'),
+
+        // Family management for owners
+        route('families', 'routes/dashboard/owner/families/index.tsx'),
+        route('families/:id', 'routes/dashboard/owner/families/[id].tsx'),
       ]),
 
       // Tenant dashboard routes
@@ -64,6 +68,10 @@ export default [
         // Payment management for tenants
         route('payments', 'routes/dashboard/tenant/payments/index.tsx'),
         route('payments/:id', 'routes/dashboard/tenant/payments/[id].tsx'),
+
+        // Family management for tenants
+        route('family', 'routes/dashboard/tenant/family/index.tsx'),
+
         // Maintenance requests for tenants
         //route('maintenance', 'routes/dashboard/tenant/maintenance/index.tsx'),
         //route('maintenance/:id', 'routes/dashboard/tenant/maintenance/[id].tsx'),
@@ -72,8 +80,8 @@ export default [
         route('events/:id', 'routes/dashboard/tenant/events/[id].tsx'),
       ]),
 
-      ...prefix('manager', [route('manager', 'routes/dashboard/manager.tsx')]),
-      ...prefix('service', [route('service', 'routes/dashboard/service.tsx')]),
+      //...prefix('manager', [route('manager', 'routes/dashboard/manager.tsx')]),
+      //...prefix('service', [route('service', 'routes/dashboard/service.tsx')]),
       route('general', 'routes/dashboard/general.tsx'),
     ]),
   ]),
@@ -90,5 +98,6 @@ export default [
     route('events/:id', 'api/events/[id]/route.ts'),
     route('properties', 'api/properties/route.ts'),
     route('properties/:id', 'api/properties/[id]/route.ts'),
+    route('families/:id', 'api/families/[id]/route.ts'),
   ]),
 ] satisfies RouteConfig;

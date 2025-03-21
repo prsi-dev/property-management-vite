@@ -78,7 +78,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
         label: true,
         type: true,
         address: true,
-        postalCode: true,
       },
     });
 
@@ -289,23 +288,21 @@ export default function TenantDashboard() {
         </Link>
 
         {/* Maintenance */}
-        <Link to="/dashboard/tenant/maintenance" className="block h-full">
-          <Card className="h-full transition-shadow hover:shadow-md">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Maintenance</CardTitle>
-                <AlertCircle className="text-primary h-5 w-5" />
-              </div>
-              <CardDescription>Submit and track maintenance requests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-primary text-3xl font-bold">{maintenanceCount}</span>
-                <span className="text-muted-foreground text-sm">Maintenance requests</span>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <Card className="h-full transition-shadow hover:shadow-md">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Maintenance</CardTitle>
+              <AlertCircle className="text-primary h-5 w-5" />
+            </div>
+            <CardDescription>Submit and track maintenance requests</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-primary text-3xl font-bold">{maintenanceCount}</span>
+              <span className="text-muted-foreground text-sm">Maintenance requests</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Events */}
         <Link to="/dashboard/tenant/events" className="block h-full">
@@ -335,20 +332,21 @@ export default function TenantDashboard() {
           <div className="space-y-3">
             {recentEvents.length > 0 ? (
               recentEvents.map(event => (
-                <Link to={`/dashboard/tenant/events/${event.id}`} key={event.id}>
-                  <div className="hover:bg-muted/50 rounded-lg border p-4 transition-colors">
-                    <div className="flex justify-between">
-                      <p className="font-medium">{event.label}</p>
-                      <Badge variant={getEventStatusVariant(event.status)}>{event.status}</Badge>
-                    </div>
-                    <div className="mt-1 flex justify-between">
-                      <p className="text-muted-foreground text-sm">{event.type}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {new Date(event.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
+                <div
+                  className="hover:bg-muted/50 rounded-lg border p-4 transition-colors"
+                  key={event.id}
+                >
+                  <div className="flex justify-between">
+                    <p className="font-medium">{event.label}</p>
+                    <Badge variant={getEventStatusVariant(event.status)}>{event.status}</Badge>
                   </div>
-                </Link>
+                  <div className="mt-1 flex justify-between">
+                    <p className="text-muted-foreground text-sm">{event.type}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {new Date(event.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               ))
             ) : (
               <p className="text-muted-foreground">No recent activity to display.</p>

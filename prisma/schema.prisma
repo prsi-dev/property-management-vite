@@ -12,6 +12,7 @@ model User {
   id                           String               @id @default(uuid())
   email                        String               @unique
   password                     String
+  age                          Int?
   name                         String
   role                         Role
   createdAt                    DateTime             @default(now())
@@ -24,9 +25,13 @@ model User {
   identificationDocumentType   String?
   identificationVerified       Boolean              @default(false)
   monthlyIncome                Float?
+  location                     Location?            @relation(fields: [locationId], references: [id])
+  locationId                   String?
   phoneNumber                  String?
   previousLandlordReference    String?
   organizationId               String?
+  familyId                     String?
+  isHeadOfFamily               Boolean              @default(false)
   applicationForms             ApplicationForm[]
   communications               Communication[]
   eventAssignments             EventAssignment[]
@@ -36,6 +41,20 @@ model User {
   resourceAssignments          ResourceAssignment[]
   organization                 Organization?        @relation(fields: [organizationId], references: [id])
   ownedResources               Resource[]           @relation("ResourceOwner")
+  family                       Family?              @relation(fields: [familyId], references: [id])
+}
+
+model Location {
+  id       String     @id @default(uuid())
+  name     String
+  address  String
+  city     String
+  state    String
+  zip      String
+  country  String
+  User     User[]
+  Family   Family[]
+  Resource Resource[]
 }
 
 model JoinRequest {
@@ -52,38 +71,44 @@ model JoinRequest {
 }
 
 model Resource {
-  id                  String               @id @default(uuid())
-  type                ResourceType
-  label               String
-  parentId            String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  address             String?
-  postalCode          String?
-  amenities           String[]
-  bathroomCount       Float?
-  bedroomCount        Int?
-  description         String?
-  images              String[]
-  isActive            Boolean              @default(true)
-  squareFootage       Float?
-  metadataGroupId     String?
-  rentAmount          Float?
-  applications        ApplicationForm[]
-  communications      Communication[]
-  events              Event[]
-  maintenanceRequests MaintenanceRequest[]
-  metadata            MetadataField[]      @relation("ResourceMetadata")
-  notifications       Notification[]
-  expenses            PropertyExpense[]
-  rentalContracts     RentalContract[]
-  metadataGroup       MetadataGroup?       @relation(fields: [metadataGroupId], references: [id])
-  parent              Resource?            @relation("ResourceHierarchy", fields: [parentId], references: [id])
-  children            Resource[]           @relation("ResourceHierarchy")
-  assignments         ResourceAssignment[]
-  organizationOwners  Organization[]       @relation("OrganizationOwner")
-  owners              User[]               @relation("ResourceOwner")
-  tags                Tag[]                @relation("ResourceTags")
+  id                   String                @id @default(uuid())
+  type                 ResourceType
+  label                String
+  parentId             String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  address              String?
+  location             Location?             @relation(fields: [locationId], references: [id])
+  locationId           String?
+  amenities            String[]
+  bathroomCount        Float?
+  bedroomCount         Int?
+  description          String?
+  images               String[]
+  isActive             Boolean               @default(true)
+  isAvailable          Boolean               @default(true)
+  squareFootage        Float?
+  metadataGroupId      String?
+  rentAmount           Float?
+  primaryFamilyId      String?
+  applications         ApplicationForm[]
+  communications       Communication[]
+  events               Event[]
+  maintenanceRequests  MaintenanceRequest[]
+  metadata             MetadataField[]       @relation("ResourceMetadata")
+  notifications        Notification[]
+  expenses             PropertyExpense[]
+  rentalContracts      RentalContract[]
+  resourceApplications ResourceApplication[]
+  metadataGroup        MetadataGroup?        @relation(fields: [metadataGroupId], references: [id])
+  parent               Resource?             @relation("ResourceHierarchy", fields: [parentId], references: [id])
+  children             Resource[]            @relation("ResourceHierarchy")
+  assignments          ResourceAssignment[]
+  organizationOwners   Organization[]        @relation("OrganizationOwner")
+  owners               User[]                @relation("ResourceOwner")
+  tags                 Tag[]                 @relation("ResourceTags")
+  primaryFamily        Family?               @relation("PrimaryOccupant", fields: [primaryFamilyId], references: [id])
+  occupyingFamilies    Family[]              @relation("ResourceOccupants")
 }
 
 model Event {
@@ -123,6 +148,7 @@ model MetadataField {
   dataType       PropertyType
   resourceId     String?
   userId         String?
+  familyId       String?
   organizationId String?
   contractId     String?
   maintenanceId  String?
@@ -137,9 +163,11 @@ model MetadataField {
   payment        RentPayment?        @relation("PaymentMetadata", fields: [paymentId], references: [id])
   resource       Resource?           @relation("ResourceMetadata", fields: [resourceId], references: [id])
   user           User?               @relation("UserMetadata", fields: [userId], references: [id])
+  family         Family?             @relation("FamilyMetadata", fields: [familyId], references: [id])
 
   @@unique([resourceId, key])
   @@unique([userId, key])
+  @@unique([familyId, key])
   @@unique([organizationId, key])
   @@unique([contractId, key])
   @@unique([maintenanceId, key])
@@ -151,6 +179,7 @@ model ResourceAssignment {
   id                String            @id @default(uuid())
   userId            String
   resourceId        String
+  familyId          String?
   role              Role
   startDate         DateTime
   endDate           DateTime?
@@ -164,12 +193,14 @@ model ResourceAssignment {
   updatedAt         DateTime          @updatedAt
   resource          Resource          @relation(fields: [resourceId], references: [id])
   user              User              @relation(fields: [userId], references: [id])
+  family            Family?           @relation(fields: [familyId], references: [id])
 }
 
 model EventAssignment {
   id        String                   @id @default(uuid())
   userId    String
   eventId   String
+  familyId  String?
   role      EventParticipantRole
   status    EventParticipationStatus @default(PENDING)
   notes     String?
@@ -177,12 +208,22 @@ model EventAssignment {
   updatedAt DateTime                 @updatedAt
   event     Event                    @relation(fields: [eventId], references: [id])
   user      User                     @relation(fields: [userId], references: [id])
+  family    Family?                  @relation(fields: [familyId], references: [id])
+}
+
+model RentalHistory {
+  id        String   @id @default(uuid())
+  familyId  String
+  family    Family   @relation(fields: [familyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ApplicationForm {
   id                       String            @id @default(uuid())
   userId                   String
   resourceId               String?
+  familyId                 String?
   desiredMoveInDate        DateTime
   desiredRentalPeriod      Int?
   numberOfOccupants        Int
@@ -203,6 +244,7 @@ model ApplicationForm {
   updatedAt                DateTime          @updatedAt
   resource                 Resource?         @relation(fields: [resourceId], references: [id])
   user                     User              @relation(fields: [userId], references: [id])
+  family                   Family?           @relation(fields: [familyId], references: [id])
   metadata                 MetadataField[]   @relation("ApplicationMetadata")
 }
 
@@ -223,6 +265,7 @@ model RentalContract {
   id                   String            @id @default(uuid())
   contractNumber       String            @unique
   resourceId           String
+  familyId             String?
   startDate            DateTime
   endDate              DateTime?
   isOpenEnded          Boolean           @default(false)
@@ -251,6 +294,7 @@ model RentalContract {
   rentPayments         RentPayment[]
   metadataGroup        MetadataGroup?    @relation(fields: [metadataGroupId], references: [id])
   resource             Resource          @relation(fields: [resourceId], references: [id])
+  family               Family?           @relation(fields: [familyId], references: [id])
 }
 
 model MaintenanceRequest {
@@ -258,6 +302,7 @@ model MaintenanceRequest {
   requestNumber         String                   @unique
   resourceId            String
   reportedBy            String
+  familyId              String?
   category              MaintenanceCategory
   title                 String
   description           String
@@ -279,6 +324,7 @@ model MaintenanceRequest {
   communications        Communication[]
   reporter              User                     @relation(fields: [reportedBy], references: [id])
   resource              Resource                 @relation(fields: [resourceId], references: [id])
+  family                Family?                  @relation(fields: [familyId], references: [id])
   metadata              MetadataField[]          @relation("MaintenanceMetadata")
 }
 
@@ -326,6 +372,7 @@ model Communication {
   type                 CommunicationType
   direction            CommunicationDirection
   userId               String
+  familyId             String?
   resourceId           String?
   maintenanceRequestId String?
   subject              String?
@@ -338,6 +385,7 @@ model Communication {
   maintenanceRequest   MaintenanceRequest?    @relation(fields: [maintenanceRequestId], references: [id])
   resource             Resource?              @relation(fields: [resourceId], references: [id])
   user                 User                   @relation(fields: [userId], references: [id])
+  family               Family?                @relation(fields: [familyId], references: [id])
 }
 
 model Organization {
@@ -371,6 +419,7 @@ model Tag {
 model Notification {
   id                String           @id @default(uuid())
   userId            String
+  familyId          String?
   title             String
   message           String
   type              NotificationType
@@ -379,6 +428,7 @@ model Notification {
   createdAt         DateTime         @default(now())
   relatedResource   Resource?        @relation(fields: [relatedResourceId], references: [id])
   user              User             @relation(fields: [userId], references: [id])
+  family            Family?          @relation(fields: [familyId], references: [id])
 }
 
 model AuditLog {
@@ -389,6 +439,60 @@ model AuditLog {
   performedBy String
   details     String?
   timestamp   DateTime    @default(now())
+}
+
+model Family {
+  id                    String                @id @default(uuid())
+  name                  String
+  description           String?
+  size                  Int
+  income                Float?
+  hasPets               Boolean               @default(false)
+  petDetails            String?
+  employmentDetails     String?
+  creditScore           Int?
+  references            String?
+  preferredContactEmail String?
+  preferredContactPhone String?
+  moveInDate            DateTime?
+  moveOutDate           DateTime?
+  status                FamilyStatus          @default(ACTIVE)
+  documents             String[]
+  notes                 String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  members               User[]
+  resourceApplications  ResourceApplication[]
+  resourceAssignments   ResourceAssignment[]
+  eventAssignments      EventAssignment[]
+  rentalContracts       RentalContract[]
+  maintenanceRequests   MaintenanceRequest[]
+  communications        Communication[]
+  applications          ApplicationForm[]
+  notifications         Notification[]
+  metadata              MetadataField[]       @relation("FamilyMetadata")
+  primaryResources      Resource[]            @relation("PrimaryOccupant")
+  occupiedResources     Resource[]            @relation("ResourceOccupants")
+  location              Location?             @relation(fields: [locationId], references: [id])
+  locationId            String?
+  preferredLocation     String?
+  preferredRent         Float?
+  leaseLength           Int?
+  image                 String?
+  verified              Boolean               @default(false)
+  rentalHistory         RentalHistory[]
+}
+
+model ResourceApplication {
+  id         String            @id @default(uuid())
+  resourceId String
+  familyId   String
+  status     ApplicationStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  resource   Resource          @relation(fields: [resourceId], references: [id])
+  family     Family            @relation(fields: [familyId], references: [id])
 }
 
 enum Role {
@@ -599,4 +703,11 @@ enum AuditAction {
   APPROVE
   REJECT
   ASSIGN
+}
+
+enum FamilyStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_VERIFICATION
+  FORMER
 }

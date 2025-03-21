@@ -146,6 +146,12 @@ export default function DashboardLayout() {
               {userRole === Role.TENANT && (
                 <>
                   <Link
+                    to="/dashboard/tenant/family"
+                    className="block rounded px-4 py-2 font-medium hover:bg-gray-100"
+                  >
+                    My Family
+                  </Link>
+                  <Link
                     to="/dashboard/tenant/lease"
                     className="block rounded px-4 py-2 font-medium hover:bg-gray-100"
                   >

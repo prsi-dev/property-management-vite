@@ -77,7 +77,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
             id: true,
             label: true,
             address: true,
-            postalCode: true,
             type: true,
             bedroomCount: true,
             bathroomCount: true,
@@ -336,10 +335,7 @@ export default function TenantLeaseDetailPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <div>
               <h3 className="mb-2 text-lg font-semibold">{contract.resource.label}</h3>
-              <p className="text-muted-foreground">
-                {contract.resource.address}
-                {contract.resource.postalCode && `, ${contract.resource.postalCode}`}
-              </p>
+              <p className="text-muted-foreground">{contract.resource.address}</p>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {contract.resource.bedroomCount !== null && (

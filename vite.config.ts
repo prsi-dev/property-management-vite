@@ -4,6 +4,9 @@ import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ command }) => ({
+  server: {
+    port: 3000,
+  },
   ssr: {
     noExternal: command === 'build' ? true : undefined,
   },

@@ -1,11 +1,31 @@
 import { Home, Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 import { Button } from '../ui/button';
+import type { User } from '@prisma/client';
 
-export function Header({ user }: { user: { id: string; email: string } | null }) {
+export function Header({ user }: { user: User | null }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  console.log(user);
+  const navigate = useNavigate();
+  const navigateToDashboard = () => {
+    if (user?.role === 'ADMIN') {
+      navigate('/dashboard/admin');
+    }
+    if (user?.role === 'OWNER') {
+      navigate('/dashboard/owner');
+    }
+    if (user?.role === 'TENANT') {
+      navigate('/dashboard/tenant');
+    }
+    if (user?.role === 'PROPERTY_MANAGER') {
+      navigate('/dashboard/manager');
+    }
+    if (user?.role === 'SERVICE_PROVIDER') {
+      navigate('/dashboard/service');
+    }
+  };
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
@@ -53,8 +73,8 @@ export function Header({ user }: { user: { id: string; email: string } | null })
               <Link to="#signup">Request Access</Link>
             </Button>
             {user ? (
-              <Button size="sm" asChild>
-                <Link to="/dashboard">Dashboard</Link>
+              <Button size="sm" onClick={navigateToDashboard}>
+                Dashboard
               </Button>
             ) : (
               <Button size="sm" asChild>

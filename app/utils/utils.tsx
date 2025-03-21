@@ -139,3 +139,31 @@ export const getInitials = (name: string) => {
     .join('')
     .toUpperCase();
 };
+
+export const getPaymentStatusBadge = (status: string) => {
+  switch (status) {
+    case 'PAID':
+      return 'success';
+    case 'PENDING':
+      return 'warning';
+    case 'LATE':
+      return 'destructive';
+    case 'UPCOMING':
+      return 'secondary';
+    case 'PARTIAL':
+      return 'info';
+    default:
+      return 'default';
+  }
+};
+
+export const getDaysUntilDue = (dueDateString: string) => {
+  const dueDate = new Date(dueDateString);
+  const today = new Date();
+  const diffTime = dueDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return 'Overdue';
+  if (diffDays === 0) return 'Due today';
+  return `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+};

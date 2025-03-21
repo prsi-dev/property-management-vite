@@ -55,7 +55,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
         id: true,
         label: true,
         address: true,
-        postalCode: true,
         type: true,
       },
     });
@@ -79,7 +78,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
             id: true,
             label: true,
             address: true,
-            postalCode: true,
           },
         },
       },
@@ -179,14 +177,7 @@ export default function TenantLeasePage() {
               <div>
                 <h3 className="font-semibold">{property.label}</h3>
                 <p className="text-muted-foreground">
-                  {property.address ? (
-                    <>
-                      {property.address}
-                      {property.postalCode && `, ${property.postalCode}`}
-                    </>
-                  ) : (
-                    'No address provided'
-                  )}
+                  {property.address ? <>{property.address}</> : 'No address provided'}
                 </p>
                 <div className="mt-2">
                   <Badge>{property.type}</Badge>

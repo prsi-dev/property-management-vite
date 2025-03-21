@@ -1,4 +1,3 @@
-import React from 'react';
 import { prisma } from '~/lib/db';
 import { useLoaderData } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
@@ -11,10 +10,10 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
 import { CreditCard, ArrowUp, ArrowDown, Clock } from 'lucide-react';
+import { formatCurrency, getPaymentStatusBadge, getDaysUntilDue, formatDate } from '~/utils/utils';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {
-    // Check authentication
     const { supabase, headers } = createServerSupabase(request);
     const { data: authData } = await supabase.auth.getUser();
 
@@ -22,7 +21,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       return redirectWithHeaders('/auth/login', headers, { status: 401 });
     }
 
-    // Check if user has tenant rights
     const user = await prisma.user.findUnique({
       where: { email: authData.user.email },
     });
@@ -31,7 +29,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       return redirectWithHeaders('/dashboard', headers, { status: 403 });
     }
 
-    // Find the tenant's assigned property through ResourceAssignment
     const resourceAssignment = await prisma.resourceAssignment.findFirst({
       where: {
         userId: user.id,
@@ -43,7 +40,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     });
 
-    // If no resource is assigned, return empty data
     if (!resourceAssignment) {
       return {
         payments: [],
@@ -55,19 +51,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     const resourceId = resourceAssignment.resourceId;
 
-    // Get property details
     const property = await prisma.resource.findUnique({
       where: { id: resourceId },
       select: {
         id: true,
         label: true,
         address: true,
-        postalCode: true,
         type: true,
+        location: true,
       },
     });
 
-    // Get active rental contract for the tenant's property
     const rentalContract = await prisma.rentalContract.findFirst({
       where: {
         resourceId,
@@ -87,7 +81,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       },
     });
 
-    // Get payment history for the tenant's contract
     const payments = rentalContract
       ? await prisma.rentPayment.findMany({
           where: {
@@ -108,12 +101,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
         })
       : [];
 
-    // Calculate next payment due
     const today = new Date();
     let nextPayment = null;
 
     if (rentalContract) {
-      // Find the next unpaid payment
       const upcomingPayment = payments.find(
         p => p.status === 'PENDING' && new Date(p.dueDate) > today
       );
@@ -121,7 +112,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       if (upcomingPayment) {
         nextPayment = upcomingPayment;
       } else {
-        // Calculate the next payment due date
         const paymentDueDay = rentalContract.paymentDueDay || 1;
         const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, paymentDueDay);
 
@@ -133,7 +123,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }
     }
 
-    // Format the payments data
     const formattedPayments = payments.map(payment => ({
       ...payment,
       dueDate: payment.dueDate.toISOString(),
@@ -179,53 +168,6 @@ export default function TenantPaymentsPage() {
   if (error) {
     toast.error('Error loading payment information:', { description: error });
   }
-
-  // Format currency for display
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  // Get payment status badge variant
-  const getPaymentStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return 'success';
-      case 'PENDING':
-        return 'warning';
-      case 'LATE':
-        return 'destructive';
-      case 'UPCOMING':
-        return 'secondary';
-      case 'PARTIAL':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
-
-  // Calculate days until due for next payment
-  const getDaysUntilDue = (dueDateString: string) => {
-    const dueDate = new Date(dueDateString);
-    const today = new Date();
-    const diffTime = dueDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return 'Overdue';
-    if (diffDays === 0) return 'Due today';
-    return `Due in ${diffDays} day${diffDays !== 1 ? 's' : ''}`;
-  };
 
   return (
     <div className="space-y-6">
@@ -288,8 +230,8 @@ export default function TenantPaymentsPage() {
               <div className="text-muted-foreground text-sm">
                 {property.address ? (
                   <>
-                    {property.address}
-                    {property.postalCode && `, ${property.postalCode}`}
+                    {property.location &&
+                      `${property.location.address}, ${property.location.city}, ${property.location.state}`}
                   </>
                 ) : (
                   'No address provided'

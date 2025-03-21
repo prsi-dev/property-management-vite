@@ -55,6 +55,40 @@ The following email addresses have pending join requests but are **not** yet reg
 | potential3@example.com | Potential Owner 3  | OWNER          |
 | potential4@example.com | Potential Tenant 4 | TENANT         |
 
+## Families
+
+The following families are seeded in the database:
+
+### The Smiths
+
+- Size: 4 members
+- Income: $120,000/year
+- Credit Score: 750
+- Pets: Yes (one small dog - beagle)
+- Employment: Both parents work full-time in professional roles
+- Status: ACTIVE
+- Description: A family of 4 with stable income and excellent rental history
+
+### The Johnsons
+
+- Size: 3 members
+- Income: $95,000/year
+- Credit Score: 720
+- Pets: No
+- Employment: Software engineer and teacher
+- Status: ACTIVE
+- Description: Young couple with one child looking for a long-term home
+
+### The Garcia Family
+
+- Size: 5 members
+- Income: $135,000/year
+- Credit Score: 710
+- Pets: No
+- Employment: Family business owners
+- Status: ACTIVE
+- Description: Multi-generational family seeking a spacious property
+
 ## How to Use These Credentials
 
 1. Navigate to the login page at `/auth/login`

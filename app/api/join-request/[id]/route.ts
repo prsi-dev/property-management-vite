@@ -144,6 +144,16 @@ export async function PATCH(request: Request, { params }: RouteParams) {
             role: joinRequest.role,
           },
         });
+        await prisma.family.create({
+          data: {
+            id: randomUUID(),
+            name: joinRequest.name,
+            size: joinRequest.familySize || 0,
+            creditScore: 0,
+            preferredLocation: null,
+            preferredRent: null,
+          },
+        });
 
         await seedUserToSupabase(newUser, temporaryPassword);
 

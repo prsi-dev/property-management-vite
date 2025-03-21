@@ -7,14 +7,24 @@ import { HowItWorks } from '~/components/landing-page/how-it-works';
 import { LandlordBenefits } from '~/components/landing-page/landlord-benefits';
 import { SignupSection } from '~/components/landing-page/signup-section';
 import { Testimonials } from '~/components/landing-page/testimonials';
+import { prisma } from '~/lib/db';
 import { createServerSupabase } from '~/lib/supabase.server';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabase } = createServerSupabase(request);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { user: user && user.email ? { id: user.id, email: user.email } : null };
+  const { data } = await supabase.auth.getUser();
+  console.log(data);
+  const user = await prisma.user.findUnique({
+    where: {
+      email: data.user?.email,
+    },
+  });
+  return { user };
+  /*  return await prisma.user.findUnique({
+    where: {
+      email: data.user?.email,
+    },
+  }); */
 };
 
 export default function Home() {
